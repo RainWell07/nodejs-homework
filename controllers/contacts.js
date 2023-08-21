@@ -1,17 +1,18 @@
 
 const ctrlWrapper = require("../helpers/ctrlWrapper");
 const {HttpError} = require("../helpers/HttpErrors");
-const { required } = require("joi");
-const contacts = require("../models/contacts");
+// const { required } = require("joi");
+const {Contact} = require("../schemas/schemaBody");
+
 
 const getAll = async (req, res, next) => {
-    const data = await contacts.listContacts();
+    const data = await Contact.find();
     return res.json(data);
 };
 
 const getContactById = async (req, res, next) => {
     const {contactId} = req.params;
-    const contact = await contacts.getContactsById(contactId);
+    const contact = await Contact.findById(contactId);
     if (!contact) {
         throw HttpError(404, "Sorry, but nothing found!");
     }
@@ -19,13 +20,13 @@ const getContactById = async (req, res, next) => {
 }
 
 const addContact = async (req, res, next) => {
-    const contact = await contacts.addContact(req.body);
+    const contact = await Contact.addContact(req.body);
     return res.status(201).json(contact);
 };
 
 const deleteContactById = async (req, res, next) => {
     const {contactId} = req.params;
-    const deletedContact = await contacts.removeContact(contactId);
+    const deletedContact = await Contact.findByIdAndRemove(contactId);
     if(!deletedContact) {
         throw HttpError(404,"Sorry, but nothing found!");
     }
@@ -34,7 +35,16 @@ const deleteContactById = async (req, res, next) => {
 
 const updateContactById = async (req, res, next) => {
     const {contactId} = req.params;
-    const updatedContact = await contacts.updateContact(contactId, req.body);
+    const updatedContact = await Contact.findByIdAndUpdate(contactId, req.body, {new:true,});
+    if(!updatedContact) {
+        throw HttpError(404, "Sorry, but nothing found!");
+    }
+    res.json(updatedContact)
+};
+
+const updateFavoriteById = async (req, res, next) => {
+    const {contactId} = req.params;
+    const updatedContact = await Contact.findByIdAndUpdate(contactId, req.body, {new:true,});
     if(!updatedContact) {
         throw HttpError(404, "Sorry, but nothing found!");
     }
@@ -47,4 +57,5 @@ module.exports = {
     addContact: ctrlWrapper(addContact),
     deleteContactById: ctrlWrapper(deleteContactById),
     updateContactById: ctrlWrapper(updateContactById),
+    updateFavoriteById: ctrlWrapper(updateFavoriteById),
 };
