@@ -5,9 +5,22 @@ const {HttpError} = require("../helpers/HttpErrors");
 const {Contact} = require("../schemas/schemaBody");
 
 
-const getAll = async (req, res, next) => {
-    const data = await Contact.find();
+const getAll = async (req, res) => {
+  const { _id: owner } = req.user;
+  const { page = 1, limit = 20, favorite } = req.query;
+
+  const skip = (page - 1) * limit;
+
+  if (favorite === "true") {
+    const data = await Contact.find({ owner, favorite }, "", {
+      skip,
+      limit,
+    });
     return res.json(data);
+  }
+
+  const data = await Contact.find({ owner }, "", { skip, limit });
+  return res.json(data);
 };
 
 const getContactById = async (req, res, next) => {
@@ -19,8 +32,9 @@ const getContactById = async (req, res, next) => {
     return res.json(contact);
 }
 
-const addContact = async (req, res, next) => {
-    const contact = await Contact.addContact(req.body);
+const addContact = async (req, res) => {
+    const {_id: owner} = req.user;
+    const contact = await Contact.create({...req.body, owner});
     return res.status(201).json(contact);
 };
 
